@@ -5,7 +5,7 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: ['esm'],
-    dts: false,
+    dts: true,
     clean: true,
   },
   // Playground bundle (all deps inlined) — used by dev and GitHub Pages

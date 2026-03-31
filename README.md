@@ -13,9 +13,9 @@ pnpm add pretext-composer
 ## Quick Start
 
 ```ts
-import { justify, renderToDOM } from 'pretext-composer'
+import { compose, renderToDOM } from 'pretext-composer'
 
-const result = justify({
+const result = compose({
   text: 'Your paragraph text here...',
   font: '16px Georgia',
   containerWidth: 480,
@@ -31,13 +31,13 @@ renderToDOM({
 
 ## API
 
-### `justify(options): JustifyResult`
+### `compose(options): JustifyResult`
 
-Runs the justification engine on a block of text. Respects paragraph breaks (`\n`).
+Runs the composition engine on a block of text. Respects paragraph breaks (`\n`).
 
 ```ts
-interface JustifyOptions {
-  text: string           // The text to justify
+interface ComposeOptions {
+  text: string           // The text to compose
   font: string           // CSS font shorthand (e.g., "16px Georgia")
   containerWidth: number // Container width in pixels
   config?: Partial<JustifyConfig>
@@ -51,6 +51,7 @@ interface JustifyResult {
   lines: JustifiedLine[] // Per-line adjustment data
   totalHeight: number    // Total height of the composed text
   lineHeight: number     // Computed line height in pixels
+  gridIncrement: number  // Active baseline grid increment
 }
 
 interface JustifiedLine {
@@ -77,6 +78,7 @@ interface RenderOptions {
   containerWidth: number
   lastLineAlignment?: 'left' | 'right' | 'center' | 'full'
   singleWordJustification?: 'left' | 'full' | 'right' | 'center'
+  textMode?: 'justify' | 'rag'
   showGuides?: boolean   // Debug overlays for margins and baseline grid
   onTextChange?: (newText: string) => void // Enables inline editing
 }
@@ -87,9 +89,9 @@ interface RenderOptions {
 All settings mirror InDesign's Justification panel. Each spacing axis has `min`, `desired`, and `max` values.
 
 ```ts
-import { justify, DEFAULT_CONFIG } from 'pretext-composer'
+import { compose, DEFAULT_CONFIG } from 'pretext-composer'
 
-const result = justify({
+const result = compose({
   text: '...',
   font: '16px Georgia',
   containerWidth: 480,
@@ -106,6 +108,12 @@ const result = justify({
     // Auto leading as % of font size
     autoLeading: 125,
 
+    // Line breaking algorithm
+    composer: 'paragraph', // 'paragraph' (Knuth-Plass) | 'greedy'
+
+    // Text mode
+    textMode: 'justify', // 'justify' | 'rag'
+
     // How to align the last line of a paragraph
     lastLineAlignment: 'left', // 'left' | 'right' | 'center' | 'full'
 
@@ -113,7 +121,22 @@ const result = justify({
     singleWordJustification: 'left', // 'left' | 'right' | 'center' | 'full'
 
     // Hanging punctuation (Optical Margin Alignment)
-    opticalAlignment: true,
+    opticalAlignment: false,
+
+    // Prevent single-word last lines
+    avoidWidows: true,
+
+    // Baseline grid snap (0 = disabled)
+    baselineGrid: 0,
+
+    // Hyphenation (false to disable)
+    hyphenation: {
+      minWordLength: 5,
+      afterFirst: 4,
+      beforeLast: 3,
+      maxConsecutive: 2,
+      hyphenationZone: 0,
+    },
   },
 })
 ```
@@ -135,27 +158,38 @@ When a line needs to be stretched or compressed to fill the container width, adj
 3. **Glyph scaling** — adjusted last resort within bounds
 4. **Overflow** — any remaining slack goes back into word spacing to guarantee full justification
 
+### Line Breaking
+
+Two composers are available:
+
+- **`'paragraph'`** (default) — Knuth-Plass optimal line breaking. Considers all possible break points across the entire paragraph to minimize overall "badness." Produces the best results.
+- **`'greedy'`** — Single-line-at-a-time breaking via pretext. Faster, matches browser behavior.
+
 ## Playground
 
 An interactive playground is included for experimenting with all settings:
 
 ```bash
-pnpm build && npx serve .
+pnpm run playground
 ```
 
-Then open `http://localhost:3000/playground/`. Features:
+Then open `http://localhost:3000`. Features:
 - Live sliders for all justification parameters
 - Alignment toolbar (Left / Center / Right / Full)
-- Inline text editing (click to edit, click away to re-justify)
+- Composer toggle (Paragraph / Greedy)
+- Rag mode with balance controls
+- Inline text editing (click to edit, click away to re-compose)
 - Visual guides: margin lines and baseline grid
 - Optical Margin Alignment toggle
+- Smart quotes toggle
+- Hyphenation controls
 
 ## Custom Rendering
 
-The `justify()` function returns raw per-line data, so you can build your own renderer for Canvas, SVG, or any other target:
+`compose()` returns plain data, so you can build your own renderer for any framework or target (React, Vue, Canvas, SVG, etc.):
 
 ```ts
-const result = justify({ text, font, containerWidth })
+const result = compose({ text, font, containerWidth })
 
 for (const line of result.lines) {
   // line.segments — array of words
@@ -170,3 +204,4 @@ for (const line of result.lines) {
 ## Built On
 
 - [@chenglou/pretext](https://github.com/chenglou/pretext) — Fast, reflow-free text measurement and line breaking
+- [hyphen](https://github.com/ytiurin/hyphen) — Language-aware automatic hyphenation

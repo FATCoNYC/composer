@@ -1,19 +1,38 @@
 {
   "name": "pretext-composer",
   "version": "1.0.0",
-  "description": "",
+  "description": "Justified text engine with Knuth-Plass line breaking, optical margins, and hyphenation",
+  "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup && cp playground/index.html docs/index.html",
     "dev": "tsup --watch",
     "playground": "tsup && cp playground/index.html docs/index.html && npx serve docs",
     "lint": "biome check src/",
-    "lint:fix": "biome check --fix src/"
+    "lint:fix": "biome check --fix src/",
+    "prepublishOnly": "pnpm run build"
   },
-  "keywords": [],
+  "keywords": [
+    "typography",
+    "justification",
+    "knuth-plass",
+    "hyphenation",
+    "text-layout",
+    "optical-margins"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.30.0",
   "dependencies": {
     "@chenglou/pretext": "^0.0.3",

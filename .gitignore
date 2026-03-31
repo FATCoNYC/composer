@@ -1,5 +1,6 @@
 node_modules/
 dist/
+docs/bundle.js
 docs/bundle.mjs
 agents*.md
 *.tsbuildinfo
