@@ -1,19 +1,17 @@
-# pretext-composer
+# @fatconyc/pretext-composer
 
-InDesign-quality text justification and composition for the web, built on [@chenglou/pretext](https://github.com/chenglou/pretext).
-
-Brings professional typographic controls to the browser that have been trapped in desktop publishing tools for decades: fine-grained word spacing, letter spacing, glyph scaling, optical margin alignment (hanging punctuation), and paragraph-aware composition.
+A paragraph composer that is better than inDesign's with proper justification, optical margins/hanging punctuation, and editorial rags. Built on [@chenglou/pretext](https://github.com/chenglou/pretext).
 
 ## Install
 
 ```bash
-pnpm add pretext-composer
+pnpm add @fatconyc/pretext-composer
 ```
 
 ## Quick Start
 
 ```ts
-import { compose, renderToDOM } from 'pretext-composer'
+import { compose, renderToDOM } from '@fatconyc/pretext-composer'
 
 const result = compose({
   text: 'Your paragraph text here...',
@@ -89,7 +87,7 @@ interface RenderOptions {
 All settings mirror InDesign's Justification panel. Each spacing axis has `min`, `desired`, and `max` values.
 
 ```ts
-import { compose, DEFAULT_CONFIG } from 'pretext-composer'
+import { compose, DEFAULT_CONFIG } from '@fatconyc/pretext-composer'
 
 const result = compose({
   text: '...',
