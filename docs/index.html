@@ -131,7 +131,7 @@
 				color: #1a0000;
 				border: none;
 				padding: 64px 64px 32px;
-				min-height: calc(100vh - 140px);
+				height: calc(100vh - 140px);
 				width: fit-content;
 				box-shadow:
 					0 1px 3px rgba(101, 0, 2, 0.06),
@@ -207,11 +207,29 @@
 				>
 			</p>
 
-			<input
-				type="hidden"
-				id="textInput"
-				value="Typography is the art and technique of arranging type to make written language legible, readable and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line-spacing, and letter-spacing, and adjusting the space between pairs of letters. The term &#x201C;typography&#x201D; is also applied to the style, arrangement, and appearance of the letters, numbers, and symbols created by the process."
-			/>
+			<div class="control-group">
+				<div
+					style="
+						display: flex;
+						justify-content: space-between;
+						align-items: center;
+						margin-bottom: 8px;
+					"
+				>
+					<h2 style="margin-bottom: 0">Text</h2>
+					<label style="font-size: 18px">
+						<input type="checkbox" id="markdownEnabled" checked />
+						Markdown
+					</label>
+				</div>
+				<textarea id="textInput" rows="8">
+Typography is the **art and technique** of arranging type to make written language *legible, readable and appealing* when displayed.
+
+The arrangement of type involves selecting `typefaces`, point sizes, line lengths, line-spacing, and letter-spacing. The term "typography" is also applied to the **style, arrangement, and appearance** of the letters, numbers, and symbols created by the process.
+
+Good typography is a matter of *visual rhythm* --- the interplay of **dark and light**, thick and thin, wide and narrow.</textarea
+				>
+			</div>
 
 			<div class="control-group">
 				<div class="alignment-bar" id="renderBar">
@@ -277,10 +295,56 @@
 						type="range"
 						id="containerWidth"
 						min="200"
-						max="800"
+						max="1200"
 						value="480"
 					/>
 					<span class="value" id="containerWidthVal">480</span>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<div
+					style="
+						display: flex;
+						justify-content: space-between;
+						align-items: center;
+						margin-bottom: 8px;
+					"
+				>
+					<h2 style="margin-bottom: 0">Columns</h2>
+					<label style="font-size: 18px">
+						<input type="checkbox" id="columnsEnabled" />
+						Enabled
+					</label>
+				</div>
+				<div id="columnControls" style="display: none">
+					<div class="slider-row">
+						<label>Count</label>
+						<input
+							type="range"
+							id="columnCount"
+							min="2"
+							max="5"
+							value="2"
+						/>
+						<span class="value" id="columnCountVal">2</span>
+					</div>
+					<div class="slider-row">
+						<label>Gap</label>
+						<input
+							type="range"
+							id="columnGap"
+							min="8"
+							max="64"
+							value="24"
+						/>
+						<span class="value" id="columnGapVal">24px</span>
+					</div>
+					<div class="alignment-bar" id="columnBalanceBar">
+						<button data-balance="balanced" class="active">
+							Balanced</button
+						><button data-balance="fill-first">Fill First</button>
+					</div>
 				</div>
 			</div>
 
@@ -348,7 +412,7 @@
 					<div class="row" style="margin-top: 8px">
 						<label>
 							<input type="checkbox" id="avoidWidows" checked />
-							Avoid Widows
+							Avoid Widows/Orphans
 						</label>
 					</div>
 					<div class="row" style="margin-top: 4px">
@@ -568,7 +632,12 @@
 		</div>
 
 		<script type="module">
-			import {compose, renderToDOM} from './bundle.js';
+			import {
+				compose,
+				renderToDOM,
+				composeColumns,
+				renderColumnsToDOM,
+			} from './bundle.js';
 
 			const $ = (id) => document.getElementById(id);
 
@@ -631,6 +700,34 @@
 			}
 
 			$('textInput').addEventListener('input', update);
+			$('markdownEnabled').addEventListener('change', update);
+			$('columnsEnabled').addEventListener('change', () => {
+				$('columnControls').style.display = $('columnsEnabled').checked
+					? ''
+					: 'none';
+				update();
+			});
+			$('columnCount').addEventListener('input', () => {
+				$('columnCountVal').textContent = $('columnCount').value;
+				update();
+			});
+			$('columnGap').addEventListener('input', () => {
+				$('columnGapVal').textContent = $('columnGap').value + 'px';
+				update();
+			});
+			let columnBalance = 'balanced';
+			for (const btn of $('columnBalanceBar').querySelectorAll(
+				'button'
+			)) {
+				btn.addEventListener('click', () => {
+					$('columnBalanceBar')
+						.querySelector('.active')
+						?.classList.remove('active');
+					btn.classList.add('active');
+					columnBalance = btn.dataset.balance;
+					update();
+				});
+			}
 			$('fontSize').addEventListener('input', update);
 			$('fontFamily').addEventListener('input', update);
 			$('singleWord').addEventListener('change', update);
@@ -856,12 +953,65 @@
 							gridOverlay.style.cssText = `position:absolute;top:calc(${padTop} - ${gi}px);left:0;right:0;height:${contentHeight + gi}px;pointer-events:none;z-index:0;background:repeating-linear-gradient(to bottom, transparent 0px, transparent ${gi - 1}px, rgba(135,206,235,0.5) ${gi - 1}px, rgba(135,206,235,0.5) ${gi}px);`;
 							out.appendChild(gridOverlay);
 						}
+					} else if ($('columnsEnabled').checked) {
+						const colCount = parseInt($('columnCount').value);
+						const colGap = parseInt($('columnGap').value);
+						const colWidth = Math.floor(
+							(containerWidth - colGap * (colCount - 1)) /
+								colCount
+						);
+
+						const avoidWO = $('avoidWidows').checked;
+						const outStyle = getComputedStyle($('output'));
+						const outputHeight = $('output').clientHeight
+							- parseFloat(outStyle.paddingTop)
+							- parseFloat(outStyle.paddingBottom);
+
+						// Pure computation — pass column widths directly, no DOM needed
+						const colResult = composeColumns({
+							text,
+							font,
+							columns: Array(colCount).fill(colWidth),
+							config: {
+								...config,
+								columnBalance,
+								columnGap: colGap,
+								columnOrphans: avoidWO ? 2 : 1,
+								columnWidows: avoidWO ? 2 : 1,
+							},
+							markdown: $('markdownEnabled').checked,
+							columnHeight: columnBalance === 'fill-first' ? outputHeight : undefined,
+						});
+
+						// Render into a grid container
+						const out = $('output');
+						out.innerHTML = '';
+						const gridContainer = document.createElement('div');
+						gridContainer.style.display = 'grid';
+						gridContainer.style.gridTemplateColumns = Array(colCount)
+							.fill(colWidth + 'px')
+							.join(' ');
+						gridContainer.style.columnGap = colGap + 'px';
+						gridContainer.style.width = containerWidth + 'px';
+						out.appendChild(gridContainer);
+
+						renderColumnsToDOM({
+							container: gridContainer,
+							result: colResult,
+							font,
+							singleWordJustification:
+								config.singleWordJustification,
+							lastLineAlignment: lastLineAlign,
+							textMode,
+							showGuides: $('showGuides').checked,
+						});
 					} else {
 						const result = compose({
 							text,
 							font,
 							containerWidth,
 							config,
+							markdown: $('markdownEnabled').checked,
 						});
 						renderToDOM({
 							container: $('output'),
@@ -873,10 +1023,6 @@
 							lastLineAlignment: lastLineAlign,
 							textMode,
 							showGuides: $('showGuides').checked,
-							onTextChange: (newText) => {
-								$('textInput').value = newText;
-								update();
-							},
 						});
 					}
 				} catch (e) {

@@ -1,14 +1,20 @@
 import { layoutWithLines, prepareWithSegments } from '@chenglou/pretext'
 import { getHangAmount } from './hang.js'
-import { prepareHyphenatedWords } from './hyphenate.js'
-import { knuthPlassBreak } from './knuth-plass.js'
+import {
+  prepareHyphenatedWords,
+  prepareStyledHyphenatedWords,
+} from './hyphenate.js'
+import { knuthPlassBreak, knuthPlassBreakStyled } from './knuth-plass.js'
 import { computeLineMetrics } from './line-metrics.js'
+import { parseMarkdownToRuns } from './markdown.js'
 import { getMeasureCtx, parseFontSize } from './measure.js'
+import { tokenizeRuns } from './styled-tokenize.js'
 import {
   DEFAULT_CONFIG,
   type JustifiedLine,
   type JustifyConfig,
   type JustifyResult,
+  type StyledSegment,
 } from './types.js'
 
 interface LineAnalysis {
@@ -98,6 +104,10 @@ export interface ComposeOptions {
   font: string
   containerWidth: number
   config?: Partial<JustifyConfig>
+  /** When true, parse `text` as markdown and apply inline styles */
+  markdown?: boolean
+  /** Font overrides for bold, italic, code styles. Auto-derived if omitted. */
+  fonts?: import('./font-resolve.js').FontMap
 }
 
 function processLine(
@@ -111,30 +121,41 @@ function processLine(
   containerWidth: number,
   font: string,
   config: JustifyConfig,
+  styledSegments?: StyledSegment[],
 ): JustifiedLine {
   let hangLeft = 0
   let hangRight = 0
   if (config.opticalAlignment && segments.length > 0) {
     const firstChar = [...segments[0]][0]
     const lastChar = [...segments[segments.length - 1]].at(-1)
-    if (firstChar) hangLeft = getHangAmount(firstChar, font)
-    if (lastChar) hangRight = getHangAmount(lastChar, font)
+    // Use per-run font for hang when styled segments are available
+    const firstFont = styledSegments?.[0]?.runs[0]?.font ?? font
+    const lastFont =
+      styledSegments?.[styledSegments.length - 1]?.runs.at(-1)?.font ?? font
+    if (firstChar) hangLeft = getHangAmount(firstChar, firstFont)
+    if (lastChar) hangRight = getHangAmount(lastChar, lastFont)
   }
 
   const lineWidth = textWidth + spaceWidth
 
+  const makeLine = (
+    overrides: Pick<
+      JustifiedLine,
+      'wordGapPx' | 'letterSpacingPx' | 'glyphScale'
+    >,
+  ): JustifiedLine => ({
+    segments,
+    styledSegments,
+    isLastLine,
+    y,
+    hangLeft,
+    hangRight,
+    ...overrides,
+  })
+
   if (config.textMode === 'rag') {
     const baseGap = wordGaps > 0 ? spaceWidth / wordGaps : 0
-    return {
-      segments,
-      isLastLine,
-      wordGapPx: baseGap,
-      letterSpacingPx: 0,
-      glyphScale: 1,
-      y,
-      hangLeft,
-      hangRight,
-    }
+    return makeLine({ wordGapPx: baseGap, letterSpacingPx: 0, glyphScale: 1 })
   }
 
   const totalHang = hangLeft + hangRight
@@ -162,32 +183,14 @@ function processLine(
     }
 
     glyphScale = Math.max(gsMin, Math.min(gsMax, glyphScale))
-    return {
-      segments,
-      isLastLine,
-      wordGapPx: 0,
-      letterSpacingPx,
-      glyphScale,
-      y,
-      hangLeft,
-      hangRight,
-    }
+    return makeLine({ wordGapPx: 0, letterSpacingPx, glyphScale })
   }
 
   const shouldJustify = !isLastLine || config.lastLineAlignment === 'full'
 
   if (!shouldJustify) {
     const baseGap = spaceWidth / wordGaps
-    return {
-      segments,
-      isLastLine,
-      wordGapPx: baseGap,
-      letterSpacingPx: 0,
-      glyphScale: 1,
-      y,
-      hangLeft,
-      hangRight,
-    }
+    return makeLine({ wordGapPx: baseGap, letterSpacingPx: 0, glyphScale: 1 })
   }
 
   let { wordGapPx, letterSpacingPx, glyphScale } = distributeSlack(
@@ -216,25 +219,13 @@ function processLine(
     if (exactGap >= minGap) {
       wordGapPx = exactGap
     } else {
-      // Enforce minGap by solving for glyphScale instead.
-      // glyphScale absorbs the difference — a slightly more compressed
-      // line is preferable to collapsed word spacing.
       wordGapPx = minGap
       const unscaledWidth = textWidth + totalLetterSpacing + minGap * wordGaps
       glyphScale = targetWidth / unscaledWidth
     }
   }
 
-  return {
-    segments,
-    isLastLine,
-    wordGapPx,
-    letterSpacingPx,
-    glyphScale,
-    y,
-    hangLeft,
-    hangRight,
-  }
+  return makeLine({ wordGapPx, letterSpacingPx, glyphScale })
 }
 
 function applyTypographersQuotes(text: string): string {
@@ -264,23 +255,40 @@ function applyTypographersQuotes(text: string): string {
 
 export function compose(options: ComposeOptions): JustifyResult {
   const config: JustifyConfig = { ...DEFAULT_CONFIG, ...options.config }
-  const { font, containerWidth } = options
-  const text = config.typographersQuotes
-    ? applyTypographersQuotes(options.text)
-    : options.text
+  const { font, containerWidth, markdown } = options
 
   const fontSize = parseFontSize(font)
   const lineHeight = fontSize * (config.autoLeading / 100)
   const grid = config.baselineGrid > 0 ? config.baselineGrid : 0
   const snapToGrid = (v: number) => (grid > 0 ? Math.ceil(v / grid) * grid : v)
 
-  const paragraphs = text.split(/\n+/).filter((p) => p.trim().length > 0)
-  const justifiedLines: JustifiedLine[] = []
-  let currentY = 0
-
   const ctx = getMeasureCtx()
   ctx.font = font
   const spaceCharWidth = ctx.measureText(' ').width
+
+  if (markdown) {
+    return composeMarkdown(
+      options.text,
+      font,
+      fontSize,
+      containerWidth,
+      config,
+      lineHeight,
+      grid,
+      snapToGrid,
+      ctx,
+      spaceCharWidth,
+      options.fonts,
+    )
+  }
+
+  const text = config.typographersQuotes
+    ? applyTypographersQuotes(options.text)
+    : options.text
+
+  const paragraphs = text.split(/\n+/).filter((p) => p.trim().length > 0)
+  const justifiedLines: JustifiedLine[] = []
+  let currentY = 0
 
   for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
     const para = paragraphs[pIdx]
@@ -373,6 +381,120 @@ export function compose(options: ComposeOptions): JustifyResult {
     }
 
     if (pIdx < paragraphs.length - 1) {
+      currentY = snapToGrid(currentY + lineHeight)
+    }
+  }
+
+  return {
+    lines: justifiedLines,
+    totalHeight: currentY,
+    lineHeight,
+    gridIncrement: grid > 0 ? grid : lineHeight,
+  }
+}
+
+/**
+ * Markdown composition path — parses markdown, resolves fonts per-run,
+ * tokenizes into styled words, and threads style info through the pipeline.
+ */
+function composeMarkdown(
+  text: string,
+  font: string,
+  fontSize: number,
+  containerWidth: number,
+  config: JustifyConfig,
+  lineHeight: number,
+  grid: number,
+  snapToGrid: (v: number) => number,
+  ctx: CanvasRenderingContext2D,
+  spaceCharWidth: number,
+  fontMap?: import('./font-resolve.js').FontMap,
+): JustifyResult {
+  // Apply typographer's quotes to the raw text before parsing
+  const mdText = config.typographersQuotes
+    ? applyTypographersQuotes(text)
+    : text
+
+  const styledParagraphs = parseMarkdownToRuns(mdText, fontSize)
+  const justifiedLines: JustifiedLine[] = []
+  let currentY = 0
+
+  // Markdown always uses the paragraph composer (greedy doesn't support styled runs)
+  const hyphenConfig = config.hyphenation || undefined
+  ctx.font = font
+  const hyphenWidth = ctx.measureText('-').width
+
+  for (let pIdx = 0; pIdx < styledParagraphs.length; pIdx++) {
+    const paraRuns = styledParagraphs[pIdx]
+    const styledWords = tokenizeRuns(paraRuns, font, ctx, fontMap)
+
+    if (styledWords.length === 0) continue
+
+    const hWords = hyphenConfig
+      ? prepareStyledHyphenatedWords(styledWords, hyphenConfig, ctx)
+      : styledWords.map((w) => ({
+          text: w.text,
+          syllables: [w.runs],
+          syllableWidths: [w.width],
+          width: w.width,
+          letterCount: w.letterCount,
+          runs: w.runs,
+        }))
+
+    const kpLines = knuthPlassBreakStyled(
+      hWords,
+      spaceCharWidth,
+      containerWidth,
+      config,
+      hyphenWidth,
+      ctx,
+    )
+
+    if (config.avoidWidows && kpLines.length >= 2) {
+      const lastLine = kpLines[kpLines.length - 1]
+      const prevLine = kpLines[kpLines.length - 2]
+      if (lastLine.words.length === 1 && prevLine.words.length >= 2) {
+        const moved = prevLine.words.pop()
+        if (!moved) continue
+        prevLine.textWidth -= moved.width
+        prevLine.wordGaps = Math.max(0, prevLine.words.length - 1)
+        prevLine.naturalSpaceWidth = spaceCharWidth * prevLine.wordGaps
+        prevLine.letterCount -= moved.letterCount
+        lastLine.words.unshift(moved)
+        lastLine.textWidth += moved.width
+        lastLine.wordGaps = Math.max(0, lastLine.words.length - 1)
+        lastLine.naturalSpaceWidth = spaceCharWidth * lastLine.wordGaps
+        lastLine.letterCount += moved.letterCount
+      }
+    }
+
+    for (let i = 0; i < kpLines.length; i++) {
+      const kpLine = kpLines[i]
+      const isLastLine = i === kpLines.length - 1
+      const styledSegments: StyledSegment[] = kpLine.words.map((w) => ({
+        runs: w.runs || [],
+        text: w.text,
+      }))
+
+      justifiedLines.push(
+        processLine(
+          kpLine.words.map((w) => w.text),
+          kpLine.textWidth,
+          kpLine.naturalSpaceWidth,
+          kpLine.wordGaps,
+          kpLine.letterCount,
+          isLastLine,
+          currentY,
+          containerWidth,
+          font,
+          config,
+          styledSegments,
+        ),
+      )
+      currentY = snapToGrid(currentY + lineHeight)
+    }
+
+    if (pIdx < styledParagraphs.length - 1) {
       currentY = snapToGrid(currentY + lineHeight)
     }
   }

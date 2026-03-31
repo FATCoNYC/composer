@@ -13,7 +13,7 @@ export default defineConfig([
     entry: { 'bundle': 'src/index.ts' },
     format: ['esm'],
     dts: false,
-    noExternal: [/@chenglou\/pretext/, /hyphen/],
+    noExternal: [/@chenglou\/pretext/, /hyphen/, /micromark/, /mdast-util/, /unist/, /mdast/, /devlop/, /decode-named-character-reference/, /character-entities/],
     outDir: 'docs',
   },
 ])
