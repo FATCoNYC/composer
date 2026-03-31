@@ -294,7 +294,7 @@ Two modes are available:
 - **Greedy composer + markdown/rag**: The greedy composer does not support styled text or rag tuning.
 - **Hyphenation language**: Currently hardcoded to English (`en-us`). Other languages are not yet supported.
 - **Font loading**: `compose()` measures text immediately. If the font hasn't loaded yet, measurements will use a fallback font. Ensure fonts are loaded before calling `compose()`.
-- **Images**: Inline images in markdown are not yet supported.
+- **Markdown scope**: Inline styles are supported (`**bold**`, `*italic*`, `` `code` ``, `[links](url)`). Block-level elements not yet supported: lists (ordered/unordered), blockquotes, tables, images, horizontal rules, and code blocks. Headings are treated as bold paragraphs with scaled font size.
 
 ## Playground
 
