@@ -89,6 +89,13 @@ export interface JustifyConfig {
    */
   composer: 'greedy' | 'paragraph'
 
+  /**
+   * Replace straight quotes, dashes, and ellipses with typographic equivalents.
+   * " → \u201C/\u201D, ' → \u2018/\u2019, -- → \u2013, --- → \u2014, ... → \u2026
+   * Default: true
+   */
+  typographersQuotes: boolean
+
   /** Hyphenation settings. Set to false to disable. */
   hyphenation: false | HyphenationConfig
 }
@@ -102,15 +109,13 @@ export interface HyphenationConfig {
   beforeLast: number
   /** Maximum consecutive hyphenated lines. 0 = unlimited. Default: 2 */
   maxConsecutive: number
-  /** Hyphenation zone in pixels. Words within this distance of the right margin won't be hyphenated. Default: 0 */
-  hyphenationZone: number
 }
 
 export const DEFAULT_CONFIG: JustifyConfig = {
   wordSpacing: { min: 75, desired: 85, max: 110 },
   letterSpacing: { min: -2, desired: 0, max: 4 },
   glyphScaling: { min: 98, desired: 100, max: 102 },
-  autoLeading: 120,
+  autoLeading: 133,
   singleWordJustification: 'left',
   lastLineAlignment: 'left',
   textMode: 'justify',
@@ -121,12 +126,12 @@ export const DEFAULT_CONFIG: JustifyConfig = {
   opticalAlignment: false,
   baselineGrid: 0,
   composer: 'paragraph',
+  typographersQuotes: true,
   hyphenation: {
     minWordLength: 5,
     afterFirst: 4,
     beforeLast: 3,
     maxConsecutive: 2,
-    hyphenationZone: 0,
   },
 }
 

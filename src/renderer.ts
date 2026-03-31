@@ -69,14 +69,16 @@ export function renderToDOM(options: RenderOptions): void {
     }
 
     const isRag = textMode === 'rag'
-    const isIncomplete = isRag || line.isLastLine || line.segments.length <= 1
     const incompleteAlign = isRag
       ? lastLineAlignment
       : line.isLastLine
         ? lastLineAlignment
         : singleWordJustification
+    const isIncomplete =
+      (isRag || line.isLastLine || line.segments.length <= 1) &&
+      incompleteAlign !== 'full'
 
-    if (!isIncomplete || incompleteAlign === 'full') {
+    if (!isIncomplete) {
       for (let w = 0; w < line.segments.length; w++) {
         const span = document.createElement('span')
         span.textContent = line.segments[w]
@@ -86,8 +88,26 @@ export function renderToDOM(options: RenderOptions): void {
         lineDiv.appendChild(span)
       }
     } else {
-      lineDiv.style.textAlign = alignmentFor(incompleteAlign)
-      lineDiv.textContent = line.segments.join(' ')
+      const text = line.segments.join(' ')
+      if (incompleteAlign === 'right' || incompleteAlign === 'center') {
+        // For right/center, use a nested span so optical margins work
+        // with the hang offset on the parent div
+        const span = document.createElement('span')
+        span.textContent = text
+        span.style.display = 'inline-block'
+        const ctx = document.createElement('canvas').getContext('2d')!
+        ctx.font = font
+        const textW = ctx.measureText(text).width
+        if (incompleteAlign === 'right') {
+          span.style.marginLeft = `${containerWidth - textW + line.hangLeft}px`
+        } else {
+          span.style.marginLeft = `${(containerWidth - textW + line.hangLeft) / 2}px`
+        }
+        lineDiv.appendChild(span)
+      } else {
+        lineDiv.style.textAlign = alignmentFor(incompleteAlign)
+        lineDiv.textContent = text
+      }
     }
 
     wrapper.appendChild(lineDiv)

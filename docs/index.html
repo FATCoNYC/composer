@@ -3,7 +3,8 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Pretext Composer — Playground</title>
+		<link rel="stylesheet" href="https://use.typekit.net/jdq8tgo.css" />
+		<title>Composer — Playground</title>
 		<style>
 			* {
 				box-sizing: border-box;
@@ -12,9 +13,10 @@
 			}
 
 			body {
-				font-family: system-ui, sans-serif;
-				background: #f5f5f5;
-				color: #222;
+				font-family: freight-display-pro, Georgia, serif;
+				background: #fffdf6;
+				color: #650002;
+				line-height: 1.5;
 				padding: 24px;
 				display: flex;
 				gap: 24px;
@@ -22,7 +24,7 @@
 			}
 
 			.controls {
-				width: 320px;
+				width: 360px;
 				flex-shrink: 0;
 				display: flex;
 				flex-direction: column;
@@ -30,24 +32,40 @@
 			}
 
 			h1 {
-				font-size: 18px;
-				font-weight: 600;
+				font-family: freightdispcmp-pro, Georgia, serif;
+				font-size: 36px;
+				font-weight: 400;
 			}
 
 			.control-group {
-				background: #fff;
-				border: 1px solid #ddd;
+				background: rgba(255, 255, 255, 0.85);
+				border: 1px solid rgba(101, 0, 2, 0.15);
 				border-radius: 8px;
 				padding: 12px;
 			}
 
 			.control-group h2 {
-				font-size: 13px;
-				font-weight: 600;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				color: #666;
+				font-family: freight-display-pro, Georgia, serif;
+				font-size: 18px;
+				font-weight: 700;
+				text-transform: none;
+				letter-spacing: 0;
+				color: #650002;
 				margin-bottom: 8px;
+			}
+
+			.control-group h3 {
+				font-family: freight-display-pro, Georgia, serif;
+				font-size: 18px;
+				font-weight: 400;
+				font-style: italic;
+				color: #650002;
+				margin-top: 8px;
+				margin-bottom: 4px;
+			}
+
+			.control-group h3:first-of-type {
+				margin-top: 0;
 			}
 
 			.slider-row {
@@ -58,8 +76,9 @@
 			}
 
 			.slider-row label {
-				font-size: 12px;
-				width: 60px;
+				font-size: 18px;
+				line-height: 1;
+				width: 80px;
 				flex-shrink: 0;
 			}
 
@@ -68,7 +87,7 @@
 			}
 
 			.slider-row .value {
-				font-size: 12px;
+				font-size: 18px;
 				width: 40px;
 				text-align: right;
 				font-variant-numeric: tabular-nums;
@@ -79,18 +98,22 @@
 				min-height: 120px;
 				padding: 8px;
 				font-family: inherit;
-				font-size: 14px;
-				border: 1px solid #ccc;
+				font-size: 18px;
+				border: 1px solid rgba(101, 0, 2, 0.2);
 				border-radius: 4px;
 				resize: vertical;
+				background: rgba(101, 0, 2, 0.02);
+				color: #650002;
 			}
 
 			select,
 			input[type='number'] {
 				padding: 4px 8px;
-				font-size: 13px;
-				border: 1px solid #ccc;
+				font-size: 18px;
+				border: 1px solid rgba(101, 0, 2, 0.2);
 				border-radius: 4px;
+				background: rgba(101, 0, 2, 0.02);
+				color: #650002;
 			}
 
 			.preview-area {
@@ -105,11 +128,14 @@
 
 			#output {
 				background: #fff;
-				border: 1px solid #ddd;
-				border-radius: 8px;
+				color: #1a0000;
+				border: none;
 				padding: 64px 64px 32px;
 				min-height: 300px;
 				width: fit-content;
+				box-shadow:
+					0 1px 3px rgba(101, 0, 2, 0.06),
+					0 4px 12px rgba(101, 0, 2, 0.04);
 			}
 
 			.row {
@@ -118,7 +144,7 @@
 				align-items: center;
 			}
 			.row label {
-				font-size: 12px;
+				font-size: 18px;
 			}
 
 			.alignment-bar {
@@ -129,10 +155,12 @@
 			.alignment-bar button {
 				flex: 1;
 				padding: 6px 8px;
-				font-size: 12px;
-				font-weight: 500;
-				border: 1px solid #ccc;
-				background: #fff;
+				font-family: freight-display-pro, Georgia, serif;
+				font-size: 18px;
+				font-weight: 700;
+				border: 1px solid rgba(101, 0, 2, 0.2);
+				background: transparent;
+				color: #650002;
 				cursor: pointer;
 				transition:
 					background 0.1s,
@@ -150,19 +178,34 @@
 			}
 
 			.alignment-bar button.active {
-				background: #222;
-				color: #fff;
-				border-color: #222;
+				background: #650002;
+				color: #fffdf6;
+				border-color: #650002;
 			}
 
 			.alignment-bar button:hover:not(.active) {
-				background: #f0f0f0;
+				background: rgba(101, 0, 2, 0.06);
 			}
 		</style>
 	</head>
 	<body>
 		<div class="controls">
-			<h1>Pretext Composer</h1>
+			<h1>Paragraph Composer</h1>
+			<p
+				style="
+					font-style: italic;
+					font-size: 20px;
+					color: #650002;
+					margin-top: -16px;
+				"
+			>
+				A paragraph composer for the web using
+				<a
+					href="https://github.com/chenglou/pretext"
+					style="color: #650002"
+					>pretext</a
+				>
+			</p>
 
 			<input
 				type="hidden"
@@ -171,6 +214,14 @@
 			/>
 
 			<div class="control-group">
+				<div class="alignment-bar" id="renderBar">
+					<button data-render="composer" class="active">
+						Composer</button
+					><button data-render="browser">Browser</button>
+				</div>
+			</div>
+
+			<div class="control-group" id="alignmentCard">
 				<h2>Alignment</h2>
 				<div class="alignment-bar" id="alignmentBar">
 					<button data-align="left" class="active">Left</button
@@ -178,14 +229,9 @@
 					><button data-align="right">Right</button
 					><button data-align="full">Full</button>
 				</div>
-			</div>
-
-			<div class="control-group">
-				<h2>Mode</h2>
-				<div class="alignment-bar" id="modeBar">
+				<div class="alignment-bar" id="modeBar" style="margin-top: 8px">
 					<button data-mode="justify" class="active">Justify</button
-					><button data-mode="rag">Rag</button
-					><button data-mode="browser">Browser</button>
+					><button data-mode="rag" id="ragBtn">Rag Right</button>
 				</div>
 				<div id="ragControls" style="display: none; margin-top: 8px">
 					<div class="slider-row">
@@ -204,23 +250,22 @@
 						style="
 							display: flex;
 							justify-content: space-between;
-							font-size: 10px;
-							color: #999;
+							font-size: 18px;
+							color: #650002;
 							margin-top: 2px;
 						"
 					>
-						<span>Dramatic</span>
-						<span>Even</span>
+						<span><em>Dramatic</em></span>
+						<span><em>Even</em></span>
 					</div>
 				</div>
-			</div>
-
-			<div class="control-group">
-				<h2>Composer</h2>
-				<div class="alignment-bar" id="composerBar">
-					<button data-composer="paragraph" class="active">
-						Paragraph</button
-					><button data-composer="greedy">Greedy</button>
+				<div id="composerBar" style="margin-top: 8px">
+					<h2 style="margin-top: 8px">Algorithm</h2>
+					<div class="alignment-bar">
+						<button data-composer="paragraph" class="active">
+							Knuth-Plass</button
+						><button data-composer="greedy">Greedy</button>
+					</div>
 				</div>
 			</div>
 
@@ -237,25 +282,99 @@
 					/>
 					<span class="value" id="containerWidthVal">480</span>
 				</div>
-				<div class="row" style="margin-top: 8px">
-					<label>Font</label>
-					<input
-						type="text"
-						id="fontInput"
-						value="16px Georgia"
-						style="
-							flex: 1;
-							padding: 4px 8px;
-							font-size: 13px;
-							border: 1px solid #ccc;
-							border-radius: 4px;
-						"
-					/>
-				</div>
 			</div>
 
 			<div class="control-group">
-				<h2>Word Spacing (%)</h2>
+				<h2>Typography</h2>
+				<div class="row">
+					<label>Font</label>
+					<input
+						type="text"
+						id="fontFamily"
+						value="Georgia"
+						style="
+							flex: 1;
+							padding: 4px 8px;
+							font-size: 18px;
+							border: 1px solid rgba(101, 0, 2, 0.2);
+							border-radius: 4px;
+							background: rgba(101, 0, 2, 0.02);
+							color: #650002;
+						"
+					/>
+				</div>
+				<div class="row" style="margin-top: 8px">
+					<label>Size</label>
+					<input
+						type="number"
+						id="fontSize"
+						min="1"
+						value="20"
+						style="
+							width: 60px;
+							padding: 4px 8px;
+							font-size: 18px;
+							border: 1px solid rgba(101, 0, 2, 0.2);
+							border-radius: 4px;
+							background: rgba(101, 0, 2, 0.02);
+							color: #650002;
+						"
+					/>
+					<span style="font-size: 18px; color: #9a6a6b">px</span>
+				</div>
+				<div class="slider-row" style="margin-top: 8px">
+					<label>Leading</label>
+					<input
+						type="range"
+						id="autoLeading"
+						min="80"
+						max="200"
+						value="133"
+					/>
+					<span class="value" id="autoLeadingVal">133%</span>
+				</div>
+				<div class="slider-row" style="margin-top: 8px">
+					<label>Grid</label>
+					<input
+						type="range"
+						id="baselineGrid"
+						min="0"
+						max="40"
+						value="0"
+					/>
+					<span class="value" id="baselineGridVal">off</span>
+				</div>
+				<div id="composerOnlyTypography">
+					<div class="row" style="margin-top: 8px">
+						<label>
+							<input type="checkbox" id="avoidWidows" checked />
+							Avoid Widows
+						</label>
+					</div>
+					<div class="row" style="margin-top: 4px">
+						<label>
+							<input type="checkbox" id="opticalAlignment" />
+							Optical Margin Alignment
+						</label>
+					</div>
+				</div>
+				<div class="row" style="margin-top: 4px">
+					<label>
+						<input type="checkbox" id="smartQuotes" checked />
+						Typographer's Quotes
+					</label>
+				</div>
+				<div class="row" style="margin-top: 4px">
+					<label>
+						<input type="checkbox" id="showGuides" checked /> Show
+						Guides
+					</label>
+				</div>
+			</div>
+
+			<div class="control-group" id="justificationCard">
+				<h2>Justification</h2>
+				<h3>Word Spacing (%)</h3>
 				<div class="slider-row">
 					<label>Min</label>
 					<input
@@ -289,10 +408,7 @@
 					/>
 					<span class="value" id="wsMaxVal">110</span>
 				</div>
-			</div>
-
-			<div class="control-group">
-				<h2>Letter Spacing (%)</h2>
+				<h3>Letter Spacing (%)</h3>
 				<div class="slider-row">
 					<label>Min</label>
 					<input
@@ -326,10 +442,7 @@
 					/>
 					<span class="value" id="lsMaxVal">4</span>
 				</div>
-			</div>
-
-			<div class="control-group">
-				<h2>Glyph Scaling (%)</h2>
+				<h3>Glyph Scaling (%)</h3>
 				<div class="slider-row">
 					<label>Min</label>
 					<input
@@ -363,22 +476,7 @@
 					/>
 					<span class="value" id="gsMaxVal">102</span>
 				</div>
-			</div>
-
-			<div class="control-group">
-				<h2>Other</h2>
-				<div class="slider-row">
-					<label>Leading</label>
-					<input
-						type="range"
-						id="autoLeading"
-						min="80"
-						max="200"
-						value="125"
-					/>
-					<span class="value" id="autoLeadingVal">125%</span>
-				</div>
-				<div class="row">
+				<div class="row" style="margin-top: 8px">
 					<label>Single Word</label>
 					<select id="singleWord">
 						<option value="left" selected>Align Left</option>
@@ -387,107 +485,81 @@
 						<option value="full">Full Justify</option>
 					</select>
 				</div>
-				<div class="slider-row" style="margin-top: 8px">
-					<label>Grid</label>
-					<input
-						type="range"
-						id="baselineGrid"
-						min="0"
-						max="40"
-						value="0"
-					/>
-					<span class="value" id="baselineGridVal">off</span>
-				</div>
-				<div class="row" style="margin-top: 8px">
-					<label>
-						<input type="checkbox" id="avoidWidows" checked /> Avoid
-						Widows
-					</label>
-				</div>
-				<div class="row" style="margin-top: 4px">
-					<label>
-						<input type="checkbox" id="opticalAlignment" /> Optical
-						Margin Alignment
-					</label>
-				</div>
-				<div class="row" style="margin-top: 4px">
-					<label>
-						<input type="checkbox" id="smartQuotes" checked /> Smart
-						Quotes
-					</label>
-				</div>
-				<div class="row" style="margin-top: 4px">
-					<label>
-						<input type="checkbox" id="showGuides" checked /> Show
-						Guides
-					</label>
-				</div>
 			</div>
 
 			<div class="control-group">
-				<h2>Hyphenation</h2>
-				<div class="row">
-					<label>
+				<div
+					style="
+						display: flex;
+						justify-content: space-between;
+						align-items: center;
+						margin-bottom: 8px;
+					"
+				>
+					<h2 style="margin-bottom: 0">Hyphenation</h2>
+					<label style="font-size: 18px">
 						<input type="checkbox" id="hyphenEnabled" checked />
 						Enabled
 					</label>
 				</div>
-				<div class="slider-row" style="margin-top: 8px">
-					<label>Min Word</label>
-					<input
-						type="range"
-						id="hMinWord"
-						min="2"
-						max="12"
-						value="5"
-					/>
-					<span class="value" id="hMinWordVal">5</span>
-				</div>
-				<div class="slider-row">
-					<label>After First</label>
-					<input
-						type="range"
-						id="hAfterFirst"
-						min="1"
-						max="8"
-						value="4"
-					/>
-					<span class="value" id="hAfterFirstVal">4</span>
-				</div>
-				<div class="slider-row">
-					<label>Before Last</label>
-					<input
-						type="range"
-						id="hBeforeLast"
-						min="1"
-						max="8"
-						value="3"
-					/>
-					<span class="value" id="hBeforeLastVal">3</span>
-				</div>
-				<div class="slider-row">
-					<label>Max Hyphens</label>
-					<input
-						type="range"
-						id="hMaxConsec"
-						min="0"
-						max="6"
-						value="2"
-					/>
-					<span class="value" id="hMaxConsecVal">2</span>
-				</div>
-				<div class="slider-row">
-					<label>Zone (px)</label>
-					<input
-						type="range"
-						id="hZone"
-						min="0"
-						max="100"
-						value="0"
-					/>
-					<span class="value" id="hZoneVal">0</span>
+				<div id="hyphenDetails">
+					<div class="slider-row">
+						<label>Min Word</label>
+						<input
+							type="range"
+							id="hMinWord"
+							min="2"
+							max="12"
+							value="5"
+						/>
+						<span class="value" id="hMinWordVal">5</span>
+					</div>
+					<div class="slider-row">
+						<label>After First</label>
+						<input
+							type="range"
+							id="hAfterFirst"
+							min="1"
+							max="8"
+							value="4"
+						/>
+						<span class="value" id="hAfterFirstVal">4</span>
+					</div>
+					<div class="slider-row">
+						<label>Before Last</label>
+						<input
+							type="range"
+							id="hBeforeLast"
+							min="1"
+							max="8"
+							value="3"
+						/>
+						<span class="value" id="hBeforeLastVal">3</span>
+					</div>
+					<div class="slider-row">
+						<label>Max Hyphens</label>
+						<input
+							type="range"
+							id="hMaxConsec"
+							min="0"
+							max="6"
+							value="2"
+						/>
+						<span class="value" id="hMaxConsecVal">2</span>
+					</div>
 				</div>
 			</div>
+
+			<a
+				href="https://github.com/FATCoNYC/pretext-composer"
+				style="
+					font-size: 18px;
+					color: #650002;
+					text-decoration: none;
+					font-style: italic;
+				"
+				>GitHub</a
+			>
 		</div>
 
 		<div class="preview-area">
@@ -541,7 +613,6 @@
 				'hAfterFirst',
 				'hBeforeLast',
 				'hMaxConsec',
-				'hZone',
 				'ragShortLine',
 			];
 
@@ -560,7 +631,8 @@
 			}
 
 			$('textInput').addEventListener('input', update);
-			$('fontInput').addEventListener('input', update);
+			$('fontSize').addEventListener('input', update);
+			$('fontFamily').addEventListener('input', update);
 			$('singleWord').addEventListener('change', update);
 			$('showGuides').addEventListener('change', update);
 			$('avoidWidows').addEventListener('change', update);
@@ -570,19 +642,89 @@
 
 			// Alignment bar
 			let lastLineAlign = 'left';
+			const fullBtn = $('alignmentBar').querySelector(
+				'[data-align="full"]'
+			);
+
+			function updateRagLabel() {
+				const ragBtn = $('ragBtn');
+				if (lastLineAlign === 'left') ragBtn.textContent = 'Rag Right';
+				else if (lastLineAlign === 'right')
+					ragBtn.textContent = 'Rag Left';
+				else ragBtn.textContent = 'Rag';
+			}
+
+			function updateFullState() {
+				const isRag = textMode === 'rag';
+				fullBtn.disabled = isRag;
+				fullBtn.style.opacity = isRag ? '0.3' : '';
+				fullBtn.style.cursor = isRag ? 'default' : 'pointer';
+			}
+
+			function setAlignment(align) {
+				$('alignmentBar')
+					.querySelector('.active')
+					?.classList.remove('active');
+				$('alignmentBar')
+					.querySelector(`[data-align="${align}"]`)
+					.classList.add('active');
+				lastLineAlign = align;
+				updateRagLabel();
+				update();
+			}
+
 			for (const btn of $('alignmentBar').querySelectorAll('button')) {
 				btn.addEventListener('click', () => {
-					$('alignmentBar')
+					if (btn.disabled) return;
+					setAlignment(btn.dataset.align);
+				});
+			}
+
+			// Render toggle (Composer / Browser)
+			let useBrowser = false;
+			for (const btn of $('renderBar').querySelectorAll('button')) {
+				btn.addEventListener('click', () => {
+					$('renderBar')
 						.querySelector('.active')
 						?.classList.remove('active');
 					btn.classList.add('active');
-					lastLineAlign = btn.dataset.align;
+					useBrowser = btn.dataset.render === 'browser';
+					$('ragControls').style.display =
+						!useBrowser && textMode === 'rag' ? '' : 'none';
+					$('composerBar').style.display = useBrowser ? 'none' : '';
+					$('justificationCard').style.display =
+						!useBrowser && textMode === 'justify' ? '' : 'none';
+					$('composerOnlyTypography').style.display = useBrowser
+						? 'none'
+						: '';
+					$('hyphenDetails').style.display = useBrowser ? 'none' : '';
+					updateFullState();
 					update();
 				});
 			}
 
 			// Mode toggle (Justify / Rag)
 			let textMode = 'justify';
+			const greedyBtn = $('composerBar').querySelector(
+				'[data-composer="greedy"]'
+			);
+
+			function updateGreedyState() {
+				const isRag = textMode === 'rag';
+				greedyBtn.disabled = isRag;
+				greedyBtn.style.opacity = isRag ? '0.3' : '';
+				greedyBtn.style.cursor = isRag ? 'default' : 'pointer';
+				if (isRag && composer === 'greedy') {
+					composer = 'paragraph';
+					$('composerBar')
+						.querySelector('.active')
+						?.classList.remove('active');
+					$('composerBar')
+						.querySelector('[data-composer="paragraph"]')
+						.classList.add('active');
+				}
+			}
+
 			for (const btn of $('modeBar').querySelectorAll('button')) {
 				btn.addEventListener('click', () => {
 					$('modeBar')
@@ -592,6 +734,13 @@
 					textMode = btn.dataset.mode;
 					$('ragControls').style.display =
 						textMode === 'rag' ? '' : 'none';
+					$('justificationCard').style.display =
+						textMode === 'justify' ? '' : 'none';
+					updateFullState();
+					updateGreedyState();
+					if (lastLineAlign === 'full' && textMode !== 'justify') {
+						setAlignment('left');
+					}
 					update();
 				});
 			}
@@ -600,6 +749,7 @@
 			let composer = 'paragraph';
 			for (const btn of $('composerBar').querySelectorAll('button')) {
 				btn.addEventListener('click', () => {
+					if (btn.disabled) return;
 					$('composerBar')
 						.querySelector('.active')
 						?.classList.remove('active');
@@ -611,8 +761,9 @@
 
 			function update() {
 				const raw = $('textInput').value;
-				const text = $('smartQuotes').checked ? smartQuotes(raw) : raw;
-				const font = $('fontInput').value;
+				const text = raw;
+				const font =
+					$('fontSize').value + 'px ' + $('fontFamily').value;
 				const containerWidth = parseInt($('containerWidth').value);
 
 				const config = {
@@ -636,6 +787,7 @@
 					lastLineAlignment: lastLineAlign,
 					avoidWidows: $('avoidWidows').checked,
 					opticalAlignment: $('opticalAlignment').checked,
+					typographersQuotes: $('smartQuotes').checked,
 					baselineGrid: parseInt($('baselineGrid').value),
 					composer,
 					hyphenation: $('hyphenEnabled').checked
@@ -644,7 +796,6 @@
 								afterFirst: parseInt($('hAfterFirst').value),
 								beforeLast: parseInt($('hBeforeLast').value),
 								maxConsecutive: parseInt($('hMaxConsec').value),
-								hyphenationZone: parseInt($('hZone').value),
 							}
 						: false,
 					textMode,
@@ -654,21 +805,57 @@
 				};
 
 				try {
-					if (textMode === 'browser') {
-						// Native browser rendering for comparison
+					if (useBrowser) {
+						// Pure CSS rendering for comparison
 						const out = $('output');
 						out.innerHTML = '';
+						out.style.position = 'relative';
 						const div = document.createElement('div');
 						div.style.width = containerWidth + 'px';
 						div.style.font = font;
-						div.style.textAlign =
-							lastLineAlign === 'full'
-								? 'justify'
-								: lastLineAlign;
 						div.style.lineHeight =
 							parseInt($('autoLeading').value) / 100 + '';
+						if (textMode === 'justify') {
+							div.style.textAlign = 'justify';
+							div.style.textAlignLast =
+								lastLineAlign === 'full'
+									? 'justify'
+									: lastLineAlign;
+						} else {
+							div.style.textAlign =
+								lastLineAlign === 'full'
+									? 'left'
+									: lastLineAlign;
+						}
+						if ($('hyphenEnabled').checked) {
+							div.style.hyphens = 'auto';
+							div.lang = 'en';
+						}
 						div.textContent = text;
 						out.appendChild(div);
+						if ($('showGuides').checked) {
+							const pad = getComputedStyle(out).paddingLeft;
+							const padTop = getComputedStyle(out).paddingTop;
+							const guideBase =
+								'position:absolute;top:0;bottom:0;width:1px;pointer-events:none;z-index:0;';
+							const leftGuide = document.createElement('div');
+							leftGuide.style.cssText = `${guideBase}left:${pad};border-left:1.5px solid rgba(255,0,0,0.35);`;
+							const rightGuide = document.createElement('div');
+							rightGuide.style.cssText = `${guideBase}left:calc(${pad} + ${containerWidth}px);border-left:1.5px solid rgba(255,0,0,0.1);`;
+							out.appendChild(leftGuide);
+							out.appendChild(rightGuide);
+							// Baseline grid: uses grid value if set, otherwise line height
+							const fontSize = parseInt($('fontSize').value);
+							const leading =
+								parseInt($('autoLeading').value) / 100;
+							const lineHeightPx = Math.round(fontSize * leading);
+							const grid = parseInt($('baselineGrid').value);
+							const gi = grid > 0 ? grid : lineHeightPx;
+							const contentHeight = div.offsetHeight;
+							const gridOverlay = document.createElement('div');
+							gridOverlay.style.cssText = `position:absolute;top:calc(${padTop} - ${gi}px);left:0;right:0;height:${contentHeight + gi}px;pointer-events:none;z-index:0;background:repeating-linear-gradient(to bottom, transparent 0px, transparent ${gi - 1}px, rgba(135,206,235,0.5) ${gi - 1}px, rgba(135,206,235,0.5) ${gi}px);`;
+							out.appendChild(gridOverlay);
+						}
 					} else {
 						const result = compose({
 							text,

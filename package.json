@@ -1,6 +1,6 @@
 {
   "name": "@fatconyc/pretext-composer",
-  "version": "0.1.0-beta.1.1",
+  "version": "0.1.0-beta.2",
   "description": "A paragraph composer that is better than inDesign's with proper justification, optical margins/hanging punctuation, and editorial rags.",
   "type": "module",
   "main": "dist/index.js",
@@ -20,6 +20,7 @@
     "build": "tsup && cp playground/index.html docs/index.html",
     "dev": "tsup --watch",
     "playground": "tsup && cp playground/index.html docs/index.html && npx serve docs",
+    "playground:dev": "cp playground/index.html docs/index.html && esbuild src/index.ts --bundle --format=esm --outfile=docs/bundle.js --serve=3000 --servedir=docs --watch",
     "lint": "biome check src/",
     "lint:fix": "biome check --fix src/",
     "prepublishOnly": "pnpm run build"

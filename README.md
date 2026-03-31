@@ -104,7 +104,7 @@ const result = compose({
     glyphScaling: { min: 98, desired: 100, max: 102 },
 
     // Auto leading as % of font size
-    autoLeading: 125,
+    autoLeading: 120,
 
     // Line breaking algorithm
     composer: 'paragraph', // 'paragraph' (Knuth-Plass) | 'greedy'
@@ -127,17 +127,51 @@ const result = compose({
     // Baseline grid snap (0 = disabled)
     baselineGrid: 0,
 
+    // Replace straight quotes/dashes/ellipses with typographic equivalents
+    typographersQuotes: true,
+
     // Hyphenation (false to disable)
     hyphenation: {
       minWordLength: 5,
       afterFirst: 4,
       beforeLast: 3,
       maxConsecutive: 2,
-      hyphenationZone: 0,
     },
   },
 })
 ```
+
+## How Justification Works
+
+### Pipeline
+
+```
+Text → Typographer's Quotes → Hyphenation → Line Breaking → Justification → Render
+```
+
+1. **Typographer's quotes**: Straight quotes, dashes, and ellipses are replaced with curly quotes, em/en dashes, and ellipsis characters (if enabled)
+2. **Hyphenation**: Soft hyphens are inserted at valid break points using language-aware rules
+3. **Line breaking**: Knuth-Plass evaluates all possible break points across the paragraph to minimize overall "badness," or greedy breaks line-by-line
+4. **Justification**: Distributes slack across word spacing, letter spacing, and glyph scaling
+5. **Rendering**: DOM spans with `marginRight` for word gaps, CSS `letter-spacing`, and `transform: scaleX()` for glyph scaling
+
+### Justification Priority
+
+When a line needs to be stretched or compressed, adjustments are applied in this order:
+
+1. **Word spacing** — adjusted first (most natural, least visible)
+2. **Letter spacing** — adjusted if word spacing hits its bounds
+3. **Glyph scaling** — adjusted as a last resort within bounds
+4. **Overflow** — any remaining slack goes back into word spacing
+
+### Constraint Priority (what overrides what)
+
+When constraints conflict, this is the override order:
+
+1. **Minimum word spacing always wins** — words will never be closer than `wordSpacing.min` % of a normal space. If a line can't fit at minimum word spacing, glyph scaling is compressed further (even below `glyphScaling.min`) to make it fit.
+2. **No overflow** — lines never extend past the container width. The glyph scale absorbs whatever is needed.
+3. **Glyph scaling min is a preference, not a hard limit** — under normal conditions it's respected, but minimum word spacing takes priority.
+4. **Letter spacing bounds are respected** within the justification cascade, but the final scaleX recalculation may produce slightly different effective values.
 
 ### Optical Margin Alignment
 
@@ -147,21 +181,24 @@ Characters that hang fully (100% of width): `"` `"` `'` `'` `"` `'` `-` `–` `�
 
 Characters that hang partially (50%): `:` `;` `!` `?` `…`
 
-### Justification Priority
-
-When a line needs to be stretched or compressed to fill the container width, adjustments are applied in priority order:
-
-1. **Word spacing** — adjusted first (most natural)
-2. **Letter spacing** — adjusted if word spacing hits its bounds
-3. **Glyph scaling** — adjusted last resort within bounds
-4. **Overflow** — any remaining slack goes back into word spacing to guarantee full justification
-
 ### Line Breaking
 
 Two composers are available:
 
-- **`'paragraph'`** (default) — Knuth-Plass optimal line breaking. Considers all possible break points across the entire paragraph to minimize overall "badness." Produces the best results.
-- **`'greedy'`** — Single-line-at-a-time breaking via pretext. Faster, matches browser behavior.
+- **`'paragraph'`** (default) — Knuth-Plass optimal line breaking. Considers all possible break points across the entire paragraph to minimize overall "badness." Produces the best results. Required for rag mode.
+- **`'greedy'`** — Single-line-at-a-time breaking via pretext. Faster, matches browser behavior. Does not support rag tuning.
+
+### Rag Mode
+
+When `textMode: 'rag'`, lines are broken optimally but not justified — word gaps use natural spacing. Rag mode requires the `'paragraph'` composer because it uses Knuth-Plass to optimize line break positions for even or dramatic rag shapes.
+
+## Known Limitations
+
+- **Canvas vs DOM measurement**: Text width is measured via canvas `measureText()`, but rendered in DOM spans. Sub-pixel differences between the two can cause lines to be slightly under- or over-filled (typically < 1px).
+- **Greedy composer + rag**: The greedy composer does not support rag tuning (`ragBalance`, `ragShortLine`, `ragStyle`). These settings only affect the paragraph composer.
+- **Hyphenation language**: Currently hardcoded to English (`en-us`). Other languages are not yet supported.
+- **Font loading**: `compose()` measures text immediately. If the font hasn't loaded yet, measurements will use a fallback font. Ensure fonts are loaded before calling `compose()`.
+- **No multi-column support**: The engine composes a single text block. Multi-column layout should be built on top by splitting `JustifyResult.lines` across columns.
 
 ## Playground
 
@@ -174,12 +211,13 @@ pnpm run playground
 Then open `http://localhost:3000`. Features:
 - Live sliders for all justification parameters
 - Alignment toolbar (Left / Center / Right / Full)
-- Composer toggle (Paragraph / Greedy)
+- Composer toggle (Knuth-Plass / Greedy)
 - Rag mode with balance controls
+- Browser comparison mode
 - Inline text editing (click to edit, click away to re-compose)
 - Visual guides: margin lines and baseline grid
 - Optical Margin Alignment toggle
-- Smart quotes toggle
+- Typographer's quotes toggle
 - Hyphenation controls
 
 ## Custom Rendering

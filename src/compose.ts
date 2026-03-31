@@ -208,8 +208,21 @@ function processLine(
   if (wordGaps > 0) {
     const targetWidth = containerWidth + totalHang - slackBuffer
     const totalLetterSpacing = letterSpacingPx * Math.max(0, letterCount - 1)
-    wordGapPx =
+    const exactGap =
       (targetWidth / glyphScale - textWidth - totalLetterSpacing) / wordGaps
+    const normalGap = spaceWidth / wordGaps
+    const minGap = normalGap * (config.wordSpacing.min / 100)
+
+    if (exactGap >= minGap) {
+      wordGapPx = exactGap
+    } else {
+      // Enforce minGap by solving for glyphScale instead.
+      // glyphScale absorbs the difference — a slightly more compressed
+      // line is preferable to collapsed word spacing.
+      wordGapPx = minGap
+      const unscaledWidth = textWidth + totalLetterSpacing + minGap * wordGaps
+      glyphScale = targetWidth / unscaledWidth
+    }
   }
 
   return {
@@ -224,9 +237,35 @@ function processLine(
   }
 }
 
+function applyTypographersQuotes(text: string): string {
+  return (
+    text
+      // Double quotes
+      .replace(/"(\S)/g, '\u201C$1')
+      .replace(/(\S)"/g, '$1\u201D')
+      .replace(/"\s/g, '\u201D ')
+      .replace(/\s"/g, ' \u201C')
+      .replace(/^"/g, '\u201C')
+      // Single quotes / apostrophes
+      .replace(/'(\S)/g, '\u2018$1')
+      .replace(/(\S)'/g, '$1\u2019')
+      .replace(/'\s/g, '\u2019 ')
+      .replace(/\s'/g, ' \u2018')
+      .replace(/^'/g, '\u2018')
+      // Dashes
+      .replace(/---/g, '\u2014')
+      .replace(/--/g, '\u2013')
+      // Ellipsis
+      .replace(/\.\.\./g, '\u2026')
+  )
+}
+
 export function compose(options: ComposeOptions): JustifyResult {
   const config: JustifyConfig = { ...DEFAULT_CONFIG, ...options.config }
-  const { text, font, containerWidth } = options
+  const { font, containerWidth } = options
+  const text = config.typographersQuotes
+    ? applyTypographersQuotes(options.text)
+    : options.text
 
   const fontSize = parseFontSize(font)
   const lineHeight = fontSize * (config.autoLeading / 100)
