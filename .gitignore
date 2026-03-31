@@ -5,3 +5,4 @@ docs/bundle.mjs
 agents*.md
 *.tsbuildinfo
 .DS_Store
+CLAUDE.md
