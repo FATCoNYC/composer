@@ -1,4 +1,4 @@
-import { getFontMetrics } from './measure.js'
+import { getFontMetrics, getMeasureCtx } from './measure.js'
 import type {
   ColumnResult,
   JustifyResult,
@@ -85,9 +85,9 @@ export function renderToDOM(options: RenderOptions): void {
 
     // Compute word-spacing: the extra px beyond the natural space character width
     if (!isIncomplete && line.segments.length > 1) {
-      const ctx = document.createElement('canvas').getContext('2d')!
+      const ctx = getMeasureCtx()
       ctx.font = line.styledSegments
-        ? (line.styledSegments[0]?.runs[0]?.font || font)
+        ? line.styledSegments[0]?.runs[0]?.font || font
         : font
       const naturalSpace = ctx.measureText(' ').width
       lineDiv.style.wordSpacing = `${line.wordGapPx - naturalSpace}px`
@@ -132,7 +132,7 @@ export function renderToDOM(options: RenderOptions): void {
           const span = document.createElement('span')
           span.textContent = text
           span.style.display = 'inline-block'
-          const ctx = document.createElement('canvas').getContext('2d')!
+          const ctx = getMeasureCtx()
           ctx.font = font
           const textW = ctx.measureText(text).width
           if (incompleteAlign === 'right') {
@@ -157,15 +157,17 @@ export function renderToDOM(options: RenderOptions): void {
     const parts: string[] = []
     for (const line of result.lines) {
       const lineText = line.styledSegments
-        ? line.styledSegments.map((seg) => seg.runs.map((r) => r.text).join('')).join(' ')
+        ? line.styledSegments
+            .map((seg) => seg.runs.map((r) => r.text).join(''))
+            .join(' ')
         : line.segments.join(' ')
       if (parts.length > 0) {
         const prevLine = result.lines[parts.length - 1]
         // Previous line ended a paragraph — start a new one
         if (prevLine?.isLastLine) {
-          parts.push('\n\n' + lineText)
+          parts.push(`\n\n${lineText}`)
         } else {
-          parts.push(' ' + lineText)
+          parts.push(` ${lineText}`)
         }
       } else {
         parts.push(lineText)

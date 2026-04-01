@@ -17,29 +17,6 @@ $('randomTextBtn').addEventListener('click', () => {
   update()
 })
 
-function _smartQuotes(text) {
-  return (
-    text
-      // Double quotes
-      .replace(/"(\S)/g, '\u201C$1') // opening "
-      .replace(/(\S)"/g, '$1\u201D') // closing "
-      .replace(/"\s/g, '\u201D ') // closing " before space
-      .replace(/\s"/g, ' \u201C') // opening " after space
-      .replace(/^"/g, '\u201C') // opening " at start
-      // Single quotes / apostrophes
-      .replace(/'(\S)/g, '\u2018$1') // opening '
-      .replace(/(\S)'/g, '$1\u2019') // closing ' / apostrophe
-      .replace(/'\s/g, '\u2019 ') // closing ' before space
-      .replace(/\s'/g, ' \u2018') // opening ' after space
-      .replace(/^'/g, '\u2018') // opening ' at start
-      // Dashes
-      .replace(/---/g, '\u2014') // em dash
-      .replace(/--/g, '\u2013') // en dash
-      // Ellipsis
-      .replace(/\.\.\./g, '\u2026')
-  )
-}
-
 // Wire up slider value displays
 const sliders = [
   'containerWidth',
@@ -207,8 +184,7 @@ for (const btn of $('composerBar').querySelectorAll('button')) {
 }
 
 function update() {
-  const raw = $('textInput').value
-  const text = raw
+  const text = $('textInput').value
   const font = `${$('fontSize').value}px ${$('fontFamily').value}`
   const containerWidth = parseInt($('containerWidth').value, 10)
 
