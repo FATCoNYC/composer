@@ -24,7 +24,6 @@ jobs:
       - run: npm run build
 
       - name: Publish
-        run: |
-          cat /home/runner/work/_temp/.npmrc
-          npm config list
-          npm publish --access public --provenance
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ''
