@@ -18,13 +18,13 @@
   ],
   "scripts": {
     "copy-playground": "cp playground/index.html playground/styles.css playground/app.js playground/samples.js docs/",
-    "build": "tsup && pnpm run copy-playground",
+    "build": "tsup && npm run copy-playground",
     "dev": "tsup --watch",
-    "playground": "pnpm run build && npx serve docs",
-    "playground:dev": "pnpm run copy-playground && esbuild src/index.ts --bundle --format=esm --outfile=docs/bundle.js --serve=3000 --servedir=docs --watch",
+    "playground": "npm run build && npx serve docs",
+    "playground:dev": "npm run copy-playground && esbuild src/index.ts --bundle --format=esm --outfile=docs/bundle.js --serve=3000 --servedir=docs --watch",
     "lint": "biome check src/",
     "lint:fix": "biome check --fix src/",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "typography",
